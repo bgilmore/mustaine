@@ -1,0 +1,52 @@
+<project name="Hessian Java Test" default="war">
+
+  <property name="build.dir" value="./build" />
+  <property name="classes.dir" value="${build.dir}/classes" />
+  <property name="lib.dir" value="./lib" />
+	<property name="config.dir" value="./config" />
+  <property name="src.dir" value="./src" />
+  <property name="war.dir" value="${build.dir}/war" />
+  <property name="war.file" value="${build.dir}/hessian_test.war" />
+
+  <path id="project.classpath">
+    <fileset dir="${lib.dir}">
+      <!--<include name="hessian-3.1.8.jar"/>-->
+      <include name="hessian-4.0.1.jar"/>
+    </fileset>
+  </path>
+
+  <target name="build">
+    <mkdir dir="${build.dir}"/>
+    <mkdir dir="${classes.dir}"/>
+    <javac srcDir="${src.dir}" destDir="${classes.dir}" classpathref="project.classpath" debug="true" target="1.5"/>
+  </target>
+
+  <target name="war" depends="build">
+  	<mkdir dir="${war.dir}" />
+    <mkdir dir="${war.dir}/WEB-INF" />
+    <mkdir dir="${war.dir}/WEB-INF/lib" />
+    <mkdir dir="${war.dir}/WEB-INF/classes" />
+    <copy toDir="${war.dir}/WEB-INF">
+      <fileset dir="${config.dir}">
+        <include name="web.xml" />
+      </fileset>
+    </copy>
+
+    <copy toDir="${war.dir}/WEB-INF/classes">
+      <fileset dir="${classes.dir}">
+        <include name="**/*.class" />
+      </fileset>
+    </copy>
+
+  	<!-- Copy Dependencies Jars -->
+    <copy todir="${war.dir}/WEB-INF/lib" flatten="true">
+      <path refid="project.classpath"/>
+    </copy>
+  	
+  	<jar jarFile="${war.file}" baseDir="${war.dir}" />
+  </target>
+	
+  <target name="clean">
+    <delete dir="${build.dir}" />
+  </target>
+</project>
