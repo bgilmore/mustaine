@@ -6,15 +6,7 @@ public interface ITestService {
 	
 	public String callReturnsString();
 	
-	public String callReturnsUnicode();
-	
 	public String callReturnsYourString(String s);
 	
 	public String callThrowsException();
-	
-	public int callReturnsInt();
-	
-	public byte[] callReturnsBinary(byte[] payload);
-	
-	public boolean toggle(boolean input);
 }
