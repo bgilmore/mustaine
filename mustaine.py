@@ -202,6 +202,8 @@ class HessianWriter:
         else:
             self.write('F')
     
+    dispatch[BooleanType] = write_bool
+    
     def write_reference(self, value):
         # check for and write circular references
         # returns 1 if the object should be written, i.e. not a reference
