@@ -191,9 +191,10 @@ class HessianWriter:
     def write_string(self, value):
         self.write('S')
         self.write(pack('>H', len(value)))
-        self.write(value)
+        self.write(value.encode('utf-8'))
     
-    dispatch[StringType] = write_string
+    dispatch[StringType]  = write_string
+    dispatch[UnicodeType] = write_string
 
     def write_bool(self, value):
         if value == True or value > 0:
@@ -379,7 +380,21 @@ class HessianParser:
     def parse_string(self):
         f = self._f
         len = unpack('>H', f.read(2))[0]
-        return f.read(len)
+        
+        bytes = []
+        while len > 0:
+            byte = self.read(1)
+            if ord(byte) in range(0x00, 0x7F):
+                bytes.append(byte)
+            elif ord(byte) in range(0xC2, 0xDF):
+                bytes.append(byte + self.read(1))
+            elif ord(byte) in range(0xE0, 0xEF):
+                bytes.append(byte + self.read(2))
+            elif ord(byte) in range(0xF0, 0xF4):
+                bytes.append(byte + self.read(3))
+            len -= 1
+        
+        return ''.join(bytes).decode('utf-8')
 
     def parse_type(self):
         f = self._f
