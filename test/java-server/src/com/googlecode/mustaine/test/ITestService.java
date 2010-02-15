@@ -1,4 +1,4 @@
-package com.royalgeoffrey.hessian.test;
+package com.googlecode.mustaine.test;
 
 public interface ITestService {
     

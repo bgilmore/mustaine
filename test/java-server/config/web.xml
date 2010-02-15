@@ -5,11 +5,11 @@
    <servlet-class>com.caucho.hessian.server.HessianServlet</servlet-class>
     <init-param>
       <param-name>home-class</param-name>
-      <param-value>com.royalgeoffrey.hessian.test.TestService</param-value>
+      <param-value>com.googlecode.mustaine.test.TestService</param-value>
     </init-param>
     <init-param>
       <param-name>home-api</param-name>
-      <param-value>com.royalgeoffrey.hessian.test.ITestService</param-value>
+      <param-value>com.googlecode.mustaine.test.ITestService</param-value>
     </init-param>
     <load-on-startup>1</load-on-startup>
   </servlet>
