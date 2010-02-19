@@ -170,6 +170,14 @@ class HessianWriter:
         else:
             f(self, value)
 
+    def write_null(self, value):
+        if value != None:
+            raise TypeError, "Trying to write None with a value of type %s" % type(value)
+        else:
+            self.write('N')
+    
+    dispatch[NoneType] = write_null
+    
     def write_int(self, value):
         self.write('I')
         self.write(pack(">l", value))
@@ -222,18 +230,19 @@ class HessianWriter:
             self.write("Vt\x00\x00I");
             self.write(pack('>l', len(value)))
             for v in value:
-                self.__write(v)
+                self.write_object(v)
             self.write('z')
     
     dispatch[TupleType] = write_list
     dispatch[ListType] = write_list
 
     def write_map(self, value):
+        print value
         if self.write_reference(value):
             self.write("Mt\x00\x00")
             for k, v in value.items():
-                self.__write(k)
-                self.__write(v)
+                self.write_string(k)
+                self.write_object(v)
             self.write("z")
             
     dispatch[DictType] = write_map
@@ -247,8 +256,8 @@ class HessianWriter:
             if self.write_reference(fields):
                 self.write("Mt\x00\x00")
                 for k, v in fields.items():
-                    self.__write(k)
-                    self.__write(v)
+                    self.write_string(k)
+                    self.write_object(v)
                 self.write("z")
     
     dispatch[InstanceType] = write_instance
