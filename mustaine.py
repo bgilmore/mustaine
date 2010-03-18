@@ -237,7 +237,6 @@ class HessianWriter:
     dispatch[ListType] = write_list
 
     def write_map(self, value):
-        print value
         if self.write_reference(value):
             self.write("Mt\x00\x00")
             for k, v in value.items():
