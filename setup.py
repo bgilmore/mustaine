@@ -10,6 +10,9 @@ setup(
     description = "Hessian RPC Library",
     long_description = "Mustaine is a library providing client and server RPC functionality according to the Hessian specification (http://hessian.caucho.com/doc/)",
     url = "http://code.google.com/p/mustaine",
+
+    maintainer = "Brandon Gilmore",
+    maintainer_email = "brandon@mg2.org",
     license = "BSD",
 
     platforms = "any",
