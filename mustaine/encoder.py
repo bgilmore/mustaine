@@ -70,20 +70,35 @@ def encode_date(value):
 def encode_string(value):
     encoded = ''
 
+    try:
+        value = value.encode('ascii')
+    except UnicodeDecodeError:
+        raise TypeError("mustaine.encoder cowardly refuses to guess the encoding for "
+                        "string objects containing bytes out of range 0x00-0x79; use "
+                        "HessianBinary or unicode objects instead")
+
     while len(value) > 65535:
         encoded += pack('>cH', 's', 65535)
         encoded += value[:65535]
         value    = value[65535:]
 
-    encoded += pack('>cH', 'S', len(value))
+    encoded += pack('>cH', 'S', len(value.decode('utf-8')))
     encoded += value
-
     return encoded
 
 @encoder_for(UnicodeType)
+@returns('string')
 def encode_unicode(value):
-    return encode_string(value.encode('utf-8'))
+    encoded = ''
 
+    while len(value) > 65535:
+        encoded += pack('>cH', 's', 65535)
+        encoded += value[:65535].encode('utf-8')
+        value    = value[65535:]
+
+    encoded += pack('>cH', 'S', len(value))
+    encoded += value.encode('utf-8')
+    return encoded
 
 @encoder_for(ListType)
 @returns('list')
