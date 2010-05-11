@@ -1,25 +1,51 @@
-import datetime
-import time
-from array import array
-from collections import namedtuple
-from struct import pack, unpack
-from types import *
-
-from mustaine.encoder import encode_object
-# from mustaine.parser import parse_bytecode
+# transparent types used for hessian serialization
+# objects of this type can appear on the wire but have no native python type
 
 class HessianCall(object):
-    def __init__(self, method, args=None):
-        self._buffer = array('c', 'H\x02\x00')
-        self._buffer.extend(pack('cB', 'C', len(method)) + method)
-        self._buffer.extend(pack('B', 0x90 + len(args)))
+    def __init__(self, method, args=None, headers=None, overload=False):
+        self.method   = method
+        self.args     = args or ()
+        self.headers  = headers or {}
+        self.overload = overload
+        if not isinstance(self.headers, dict):
+            raise TypeError("HessianCall headers must be passed as a dict")
 
-        for arg in args:
-            self._buffer.extend(encode_object(arg))
+    def __repr__(self):
+        return "<mustaine.protocol.HessianCall({0}, ...)>".format(self.method)
 
-    def __len__(self):
-        return len(self._buffer)
+
+class HessianReply(object):
+    def __init__(self, result):
+        self._result = result
+
+    def __repr__(self):
+        return "<mustaine.protocol.HessianReply>"
+
+
+class HessianFault(Exception):
+    def __init__(self, code, message):
+        self.code    = code
+        self.message = message
+
+    def __repr__(self):
+        return "<mustaine.protocol.HessianFault [{0}: {1}]>".format(self.code, self.message)
 
     def __str__(self):
-        return self._buffer.tostring()
+        return self.__repr__()
+
+class HessianBinary(object):
+    def __init__(self, value):
+        self.value = value
+
+    def __repr__(self):
+        return "<mustaine.protocol.HessianBinary({0})>".format(self.value)
+
+
+class HessianRemote(object):
+    def __init__(self, type_name, url):
+        self.type_name = type_name
+        self.url       = url
+
+    def __repr__(self):
+        return "<mustaine.protocol.HessianRemote({0}, {1})>".format(self.type_name, self.url)
 

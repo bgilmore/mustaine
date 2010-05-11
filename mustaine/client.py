@@ -2,6 +2,7 @@ from httplib import HTTPConnection, HTTPSConnection
 from urlparse import urlparse
 import base64
 
+from mustaine.encoder import encode_object
 from mustaine.protocol import HessianCall
 import __version__
 
@@ -9,15 +10,15 @@ import __version__
 class ProtocolError(Exception):
     """ Raised when an HTTP error occurs """
     def __init__(self, url, status, reason):
-        self.url    = url
-        self.status = status
-        self.reason = reason
+        self._url    = url
+        self._status = status
+        self._reason = reason
     
     def __str__(self):
         return self.__repr__()
     
     def __repr__(self):
-        return "<ProtocolError for {0}: {1} {2}>".format(self.url, self.status, self.reason)
+        return "<ProtocolError for {0}: {1} {2}>".format(self._url, self._status, self._reason)
 
 
 class HessianProxy(object):
@@ -75,7 +76,20 @@ class HessianProxy(object):
         for header in self._headers:
             self._client.putheader(*header)
         
-        request = HessianCall(method, args)
+        request = encode_object(HessianCall(method, args))
+
+        def hexdump(src, length=8):
+            result = []
+            digits = 4 if isinstance(src, unicode) else 2
+            for i in xrange(0, len(src), length):
+               s = src[i:i+length]
+               hexa = b' '.join(["%0*X" % (digits, ord(x))  for x in s])
+               text = b''.join([x if 0x20 <= ord(x) < 0x7F else b'.'  for x in s])
+               result.append( b"%04X   %-*s   %s" % (i, length*(digits + 1), hexa, text) )
+            return b'\n'.join(result)
+        print hexdump(request)
+
+
         self._client.putheader("Content-Length", str(len(request)))
         self._client.endheaders()
         self._client.send(str(request))
