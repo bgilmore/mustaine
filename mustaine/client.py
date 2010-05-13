@@ -87,7 +87,10 @@ class HessianProxy(object):
         response = self._client.getresponse()
         if response.status != 200:
             raise ProtocolError(self._uri.geturl(), response.status, response.reason)
-        
-        result = self._parse.from_stream(response)
-        return result
+
+        reply = self._parse.from_stream(response)
+        if isinstance(reply.value, Fault):
+            raise reply.value
+        else:
+            return reply.value
 

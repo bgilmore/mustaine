@@ -107,17 +107,64 @@ class Parser(object):
         try:
             r = self._stream.read(n)
         except IOError:
-            raise ParseError("Encountered unexpected end of stream")
+            raise ParseError('Encountered unexpected end of stream')
         except:
             raise
         else:
             if len(r) == 0:
-                raise ParseError("Encountered unexpected end of stream")
+                raise ParseError('Encountered unexpected end of stream')
 
         return r
 
     def _read_object(self, code):
-        print "Reading a {0!r}".format(code)
+        if   code == 'N':
+            return None
+        elif code == 'T':
+            return True
+        elif code == 'F':
+            return False
+        elif code == 'I':
+            return int(unpack('>l', self._read(4))[0])
+        elif code == 'L':
+            return long(unpack('>q', self._read(8))[0])
+        elif code == 'D':
+            return float(unpack('>d', self._read(8))[0])
+        elif code == 'd':
+            return self._read_date()
+        elif code == 's' or code == 'x':
+            fragment = self._read_string() 
+            next     = self._read(1)
+            if next.lower() == code:
+                return fragment + self._read_object(next)
+            else:
+                raise ParseError("Expected terminal string segment, got {0!r}".format(next))
+        elif code == 'S' or code == 'X':
+            return self._read_string()
+
+    def _read_date(self):
+        timestamp = unpack('>q', self._read(8))[0]
+        return datetime.datetime.fromtimestamp(timestamp * 1000)
+    
+    def _read_string(self):
+        len = unpack('>H', self._read(2))[0]
+        
+        bytes = []
+        while len > 0:
+            byte = self._read(1)
+            if ord(byte) in range(0x00, 0x7F):
+                bytes.append(byte)
+            elif ord(byte) in range(0xC2, 0xDF):
+                bytes.append(byte + self._read(1))
+            elif ord(byte) in range(0xE0, 0xEF):
+                bytes.append(byte + self._read(2))
+            elif ord(byte) in range(0xF0, 0xF4):
+                bytes.append(byte + self._read(3))
+            len -= 1
+        
+        return ''.join(bytes).decode('utf-8')
+        
+
+
 
 
 
