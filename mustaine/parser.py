@@ -63,7 +63,7 @@ class Parser(object):
                     raise ParseError("Invalid Hessian message marker: {0!r}".format(code))
 
                 if   code == 'H':
-                    key, value = self._read_header()
+                    key, value = self._read_keyval()
                     self._result.headers[key] = value
                     continue
 
@@ -140,10 +140,26 @@ class Parser(object):
                 raise ParseError("Expected terminal string segment, got {0!r}".format(next))
         elif code == 'S' or code == 'X':
             return self._read_string()
+        elif code == 'b':
+            fragment = self._read_binary()
+            next     = self._read(1)
+            if next.lower() == code:
+                return fragment + self._read_binary(next)
+        elif code == 'B':
+            return self._read_binary()
+        elif code == 'r':
+            return self._read_remote()
+        elif code == 'R':
+            # TODO: reference parsing
+            raise NotImplementedError("Reference parsing not yet supported")
+        elif code == 'V':
+            return self._read_list()
+        elif code == 'M':
+            return self._read_map()
 
     def _read_date(self):
         timestamp = unpack('>q', self._read(8))[0]
-        return datetime.datetime.fromtimestamp(timestamp * 1000)
+        return datetime.datetime.fromtimestamp(timestamp / 1000) 
     
     def _read_string(self):
         len = unpack('>H', self._read(2))[0]
@@ -162,58 +178,78 @@ class Parser(object):
             len -= 1
         
         return ''.join(bytes).decode('utf-8')
+
+    def _read_binary(self):
+        len = unpack('>H', self._read(2))[0]
+        return Binary(self._read(len))
+
+    def _read_remote(self):
+        r    = Remote()
+        code = self._read(1)
+
+        if code == 't':
+            r.type = self._read(unpack('>H', self._read(2))[0])
+            code   = self._read(1)
+        else:
+            r.type = None
+
+        if code != 's' and code != 'S':
+            raise ParseError("Expected string object while parsing Remote object URL")
+
+        r.url = self._read_object(code)
+        return r
+
+    def _read_reference(self):
+        pass # not yet
+
+    def _read_list(self):
+        cast = list
+        code = self._read(1)
+
+        if code == 't':
+            # Python doesn't natively support typed lists, so unless we get a feature request
+            # to implement a non-native typed vector, we're going to silently discard the type
+            self_.read(unpack('>H', self._read(2)))
+            code = self._read(1)
+
+        if code == 'l':
+            # A length was sent with the list, so we'll deserialize this as a tuple. However,
+            # the length is irrelevant for decoding so we'll discard it.
+            self._read(4)
+            code = self._read(1)
+            cast = tuple
+
+        members = list()
+        while code != 'z':
+            members.append(self._read_object(code))
+            code = self._read(1)
+
+        return cast(members)
+
+    def _read_map(self):
+        cast = None
+        code = self._read(1)
+
+        if code == 't':
+            # a typed map deserializes to an object rather than a dict
+            cast = self._build_object(self._read(unpack('>H', self._read(2))))
         
+        fields = dict()
+        while code != 'z':
+            key, value  = self._read_keyval(code)
+            fields[key] = value
 
+        if cast:
+            # TODO: this spits out immutable objects; fix me
+            rtype = namedtuple(cast.rpartition('.')[-1], " ".join(fields.keys()))
+            return rtype(fields.values())
+        else:
+            return fields
 
+    def _read_keyval(self, first=None):
+        key   = self._read_object(first or self._read(1))
+        next  = self._read(1)
+        value = self._read_object(next)
 
-
-
-
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# class Message(object):
-#     def __new__(
-# def parse_message(stream):
-#     if isinstance(stream, StringType):
-#         stream = StringIO(stream)
-#     elif isinstance(stream, UnicodeType):
-#         stream = StringIO(stream.encode('utf-8'))
-#     else:
-#         if not (hasattr(stream, 'read') and hasattr(stream.read, '__call__')):
-#             raise TypeError("parse_message can only handle strings and filehandle-type objects")
-# 
-#     preamble = stream.read(3)
-#     if   preamble == 'c\x01\x00':
-#         return 
-#     elif preamble == 'r\x01\x00':
-#         message_type = HessianReply
-#     else:
-#         raise ParseError("Unrecognized message preamble: {0!r}".format(preamble))
-# 
-#     code = stream.read(1)
-#     if code == 'H':
-#         raise NotImplementedError("TODO: add header support")
-# 
-# 
-# 
-# 
-# 
-# 
-#     if stream.read(1) == 'H':
-#         raise NotImplementedError("TODO: add header support")
-#     else:
-#         # no headers found, rewind
-#         stream.seek(stream.tell() - 1)
-#     
-#     if message_type == HessianCall:
-#         method = read_method(stream)
-#         result = HessianCall(method)
-#     else:
-#         if stream.read(1) == 'f':
-#             message_type = HessianFault
-# 
+        return key, value
+        
