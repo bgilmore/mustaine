@@ -1,51 +1,94 @@
 # transparent types used for hessian serialization
 # objects of this type can appear on the wire but have no native python type
 
-class HessianCall(object):
-    def __init__(self, method, args=None, headers=None, overload=False):
-        self.method   = method
-        self.args     = args or ()
-        self.headers  = headers or {}
-        self.overload = overload
-        if not isinstance(self.headers, dict):
-            raise TypeError("HessianCall headers must be passed as a dict")
+class Call(object):
+    def __init__(self, method=None, args=None, headers=None, overload=None):
+        self._method   = method or ''
+        self._args     = args or list()
+        self._headers  = headers or dict()
+        self._overload = overload or False
 
-    def __repr__(self):
-        return "<mustaine.protocol.HessianCall({0}, ...)>".format(self.method)
+    @property
+    def method(self):
+        return self._method
+
+    @method.setter
+    def method(self, value):
+        if isinstance(value, str):
+            self._method = value
+        else:
+            raise TypeError("Call.method must be a string")
+
+    @property
+    def args(self):
+        return self._args
+
+    @args.setter
+    def args(self, value):
+        if hasattr(value, '__iter__'):
+            self._args = value
+        else:
+            raise TypeError("Call.args must be an iterable value")
+
+    @property
+    def headers(self):
+        return self._headers
+
+    @headers.setter
+    def headers(self, value):
+        if not isinstance(value, dict):
+            raise TypeError("Call.headers must be a dict of strings to objects")
+
+        for key in value.keys():
+            if not isinstance(key, basestring):
+                raise TypeError("Call.headers must be a dict of strings to objects")
+
+        self._headers = value
+
+    @property
+    def overload(self):
+        return self._overload
+
+    @overload.setter
+    def overload(self, value):
+        if isinstance(value, bool):
+            self._overload = value
+        else:
+            raise TypeError("Call.overload must be True or False")
 
 
-class HessianReply(object):
-    def __init__(self, result):
-        self._result = result
+class Reply(object):
+    def __init__(self, value=None, headers=None):
+        self.value    = value # unmanaged property
+        self._headers = headers or dict()
 
-    def __repr__(self):
-        return "<mustaine.protocol.HessianReply>"
+    @property
+    def headers(self):
+        return self._headers
+
+    @headers.setter
+    def headers(self, value):
+        if not isinstance(value, dict):
+            raise TypeError("Call.headers must be a dict of strings to objects")
+
+        for key in value.keys():
+            if not isinstance(key, basestring):
+                raise TypeError("Call.headers must be a dict of strings to objects")
+
+        self._headers = value
 
 
-class HessianFault(Exception):
-    def __init__(self, code, message):
+class Fault(Exception):
+    def __init__(self, code=None, message=None):
         self.code    = code
         self.message = message
 
-    def __repr__(self):
-        return "<mustaine.protocol.HessianFault [{0}: {1}]>".format(self.code, self.message)
-
-    def __str__(self):
-        return self.__repr__()
-
-class HessianBinary(object):
+class Binary(object):
     def __init__(self, value):
         self.value = value
 
-    def __repr__(self):
-        return "<mustaine.protocol.HessianBinary({0})>".format(self.value)
-
-
-class HessianRemote(object):
+class Remote(object):
     def __init__(self, type_name, url):
         self.type_name = type_name
         self.url       = url
-
-    def __repr__(self):
-        return "<mustaine.protocol.HessianRemote({0}, {1})>".format(self.type_name, self.url)
 

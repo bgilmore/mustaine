@@ -1,6 +1,6 @@
 import datetime
 import time
-from struct import pack, unpack
+from struct import pack
 
 from types import *
 from mustaine.protocol import *
@@ -75,7 +75,7 @@ def encode_string(value):
     except UnicodeDecodeError:
         raise TypeError("mustaine.encoder cowardly refuses to guess the encoding for "
                         "string objects containing bytes out of range 0x00-0x79; use "
-                        "HessianBinary or unicode objects instead")
+                        "Binary or unicode objects instead")
 
     while len(value) > 65535:
         encoded += pack('>cH', 's', 65535)
@@ -121,13 +121,13 @@ def encode_map(obj):
     encoded = ''.join(map(encode_pair, obj.items()))
     return pack('>c', 'M') + encoded + 'z'
 
-@encoder_for(HessianRemote)
+@encoder_for(Remote)
 @returns('map')
 def encode_remote(obj):
     encoded = encode_string(obj.url)
     return pack('>2cH', 'r', 't', len(obj.type_name)) + obj.type_name + encoded
 
-@encoder_for(HessianBinary)
+@encoder_for(Binary)
 @returns('binary')
 def encode_binary(obj):
     encoded = ''
@@ -143,7 +143,7 @@ def encode_binary(obj):
 
     return encoded
 
-@encoder_for(HessianCall)
+@encoder_for(Call)
 @returns('call')
 def encode_call(call):
     method    = call.method
@@ -152,7 +152,7 @@ def encode_call(call):
 
     for header,value in call.headers.items():
         if not isinstance(header, StringType):
-            raise TypeError("HessianCall header keys must be strings")
+            raise TypeError("Call header keys must be strings")
 
         headers += pack('>cH', 'H', len(header)) + header
         headers += encode_object(value)

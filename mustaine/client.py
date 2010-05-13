@@ -3,7 +3,8 @@ from urlparse import urlparse
 import base64
 
 from mustaine.encoder import encode_object
-from mustaine.protocol import HessianCall
+from mustaine.parser import Parser
+from mustaine.protocol import Call, Reply, Fault
 import __version__
 
 
@@ -26,6 +27,8 @@ class HessianProxy(object):
                 ('User-Agent', 'mustaine/' + __version__.VERSION_STRING),
                 ('Content-Type', 'application/x-hessian'),
                ]
+
+    _parse   = Parser()
 
     def __init__(self, service_uri, credentials=None, key_file=None, cert_file=None, timeout=10):
         self._uri = urlparse(service_uri)
@@ -76,7 +79,7 @@ class HessianProxy(object):
         for header in self._headers:
             self._client.putheader(*header)
         
-        request = encode_object(HessianCall(method, args))
+        request = encode_object(Call(method, args))
         self._client.putheader("Content-Length", str(len(request)))
         self._client.endheaders()
         self._client.send(str(request))
@@ -85,5 +88,6 @@ class HessianProxy(object):
         if response.status != 200:
             raise ProtocolError(self._uri.geturl(), response.status, response.reason)
         
-        return response.read()
+        result = self._parse.from_stream(response)
+        return result
 
