@@ -79,13 +79,16 @@ class Reply(object):
 
 
 class Fault(Exception):
-    def __init__(self, code=None, message=None):
+    def __init__(self, code=None, message=None, detail=None):
         self.code    = code
         self.message = message
+        self.detail  = detail
+
 
 class Binary(object):
     def __init__(self, value):
         self.value = value
+
 
 class Remote(object):
     def __init__(self, type_name, url):

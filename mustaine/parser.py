@@ -232,7 +232,7 @@ class Parser(object):
 
         if code == 't':
             # a typed map deserializes to an object rather than a dict
-            cast = self._build_object(self._read(unpack('>H', self._read(2))))
+            cast = self._read(unpack('>H', self._read(2)))
         
         fields = dict()
         while code != 'z':
@@ -246,10 +246,17 @@ class Parser(object):
         else:
             return fields
 
+    def _read_fault(self):
+        f = Fault()
+        for _ in range(3):
+            key, value = self._read_keyval()
+            setattr(f, key, value)
+        return f
+
     def _read_keyval(self, first=None):
         key   = self._read_object(first or self._read(1))
         next  = self._read(1)
         value = self._read_object(next)
 
         return key, value
-        
+
