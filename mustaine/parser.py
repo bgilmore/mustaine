@@ -209,7 +209,7 @@ class Parser(object):
         if code == 't':
             # Python doesn't natively support typed lists, so unless we get a feature request
             # to implement a non-native typed vector, we're going to silently discard the type
-            self_.read(unpack('>H', self._read(2)))
+            self._read(unpack('>H', self._read(2))[0])
             code = self._read(1)
 
         if code == 'l':
@@ -232,7 +232,7 @@ class Parser(object):
 
         if code == 't':
             # a typed map deserializes to an object rather than a dict
-            cast = self._read(unpack('>H', self._read(2)))
+            cast = self._read(unpack('>H', self._read(2))[0])
         
         fields = dict()
         while code != 'z':
