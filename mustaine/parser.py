@@ -16,15 +16,15 @@ class ParseError(Exception):
     pass
 
 class Parser(object):
-    def from_string(self, string):
+    def parse_string(self, string):
         if isinstance(string, UnicodeType):
             stream = StringIO(string.encode('utf-8'))
         else:
             stream = StringIO(string)
 
-        return self.from_stream(stream)
+        return self.parse_stream(stream)
 
-    def from_stream(self, stream):
+    def parse_stream(self, stream):
         self._refs   = []
         self._result = None
 
@@ -156,6 +156,8 @@ class Parser(object):
             return self._read_list()
         elif code == 'M':
             return self._read_map()
+        else:
+            raise ParseError("Unknown type marker {0!r}".format(code))
 
     def _read_date(self):
         timestamp = unpack('>q', self._read(8))[0]
@@ -233,16 +235,19 @@ class Parser(object):
         if code == 't':
             # a typed map deserializes to an object rather than a dict
             cast = self._read(unpack('>H', self._read(2))[0])
+            code = self._read(1)
         
         fields = dict()
         while code != 'z':
             key, value  = self._read_keyval(code)
             fields[key] = value
 
+            code = self._read(1)
+
         if cast:
             # TODO: this spits out immutable objects; fix me
             rtype = namedtuple(cast.rpartition('.')[-1], " ".join(fields.keys()))
-            return rtype(fields.values())
+            return rtype(*fields.values())
         else:
             return fields
 
@@ -255,8 +260,7 @@ class Parser(object):
 
     def _read_keyval(self, first=None):
         key   = self._read_object(first or self._read(1))
-        next  = self._read(1)
-        value = self._read_object(next)
+        value = self._read_object(self._read(1))
 
         return key, value
 

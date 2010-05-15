@@ -28,7 +28,7 @@ class HessianProxy(object):
                 ('Content-Type', 'application/x-hessian'),
                ]
 
-    _parse   = Parser()
+    _parser  = Parser()
 
     def __init__(self, service_uri, credentials=None, key_file=None, cert_file=None, timeout=10):
         self._uri = urlparse(service_uri)
@@ -88,7 +88,7 @@ class HessianProxy(object):
         if response.status != 200:
             raise ProtocolError(self._uri.geturl(), response.status, response.reason)
 
-        reply = self._parse.from_stream(response)
+        reply = self._parser.parse_stream(response)
         if isinstance(reply.value, Fault):
             raise reply.value
         else:

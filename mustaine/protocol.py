@@ -91,7 +91,7 @@ class Binary(object):
 
 
 class Remote(object):
-    def __init__(self, type_name, url):
+    def __init__(self, type_name=None, url=None):
         self.type_name = type_name
         self.url       = url
 
