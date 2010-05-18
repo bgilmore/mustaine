@@ -113,7 +113,6 @@ class Magic(object):
             def __repr__(self):
                 return "<{0} object at {1}>".format(self._meta_type, hex(id(self)))
 
-        attrib['_meta_type'] = meta_type
         metaclass = type("Object", (Meta,), {'_meta_type': meta_type})
         return metaclass(**attrib)
 

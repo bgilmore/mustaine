@@ -27,9 +27,12 @@ def returns(data_type):
 def encode_object(obj):
     if type(obj) in ENCODERS:
         encoder = ENCODERS[type(obj)]
-        return encoder(obj)[1]
+    elif hasattr(obj, '_meta_type'):
+        encoder = ENCODERS[DictType]
     else:
         raise TypeError("mustaine.encoder cannot serialize {0}".format(type(obj)))
+    
+    return encoder(obj)[1]
 
 
 @encoder_for(NoneType)
@@ -119,6 +122,10 @@ def encode_map(obj):
         return ''.join((encode_object(pair[0]), encode_object(pair[1])))
 
     encoded = ''.join(map(encode_pair, obj.items()))
+
+    if hasattr(obj, '_meta_type'):
+        encoded = pack('>cH', 't', len(obj._meta_type)) + obj._meta_type + encoded
+
     return pack('>c', 'M') + encoded + 'z'
 
 @encoder_for(Remote)
@@ -157,12 +164,19 @@ def encode_call(call):
         headers += pack('>cH', 'H', len(header)) + header
         headers += encode_object(value)
 
+    # TODO: this is mostly duplicated at the top of the file in encode_object. dedup
     for arg in call.args:
         if type(arg) in ENCODERS:
-            data_type, arg = ENCODERS[type(arg)](arg)
-            if call.overload:
-                method    += '_' + data_type
-            arguments += arg
+            encoder = ENCODERS[type(arg)]
+        elif hasattr(arg, '_meta_type'):
+            encoder = ENCODERS[DictType]
+        else:
+            raise TypeError("mustaine.encoder cannot serialize {0}".format(type(obj)))
+
+        data_type, arg = encoder(arg)
+        if call.overload:
+            method    += '_' + data_type
+        arguments += arg
 
     encoded  = pack('>cBB', 'c', 1, 0)
     encoded += headers
