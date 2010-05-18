@@ -1,5 +1,4 @@
 import datetime
-from collections import namedtuple
 from struct import unpack
 
 try:
@@ -240,14 +239,16 @@ class Parser(object):
         fields = dict()
         while code != 'z':
             key, value  = self._read_keyval(code)
-            fields[key] = value
+
+            if cast:
+                fields[str(key)] = value
+            else:
+                fields[key] = value
 
             code = self._read(1)
 
         if cast:
-            # TODO: this spits out immutable objects; fix me
-            rtype = namedtuple(cast.rpartition('.')[-1], " ".join(fields.keys()))
-            return rtype(*fields.values())
+            return Magic(cast, **fields)
         else:
             return fields
 
