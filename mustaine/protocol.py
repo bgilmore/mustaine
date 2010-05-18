@@ -95,24 +95,26 @@ class Remote(object):
         self.type_name = type_name
         self.url       = url
 
-class Magic(object):
-    def __new__(cls, meta_type, **attrib):
 
-        class Meta(dict):
-            def __init__(self, **kwargs):
-                for attr in kwargs.keys():
-                    self[attr] = kwargs[attr]
+class Object(object):
+    def __init__(self, meta_type, **kwargs):
+        self.__meta_type = meta_type
 
-            def __getattr__(self, attr):
-                if attr in self:
-                    return self[attr]
+        for key in kwargs:
+            self.__dict__[key] = kwargs[key]
 
-            def __setattr__(self, attr, val):
-                self[attr] = val
+    def __repr__(self):
+        return "<{0} object at {1}>".format(self.__meta_type, hex(id(self)))
 
-            def __repr__(self):
-                return "<{0} object at {1}>".format(self._meta_type, hex(id(self)))
+    def __getstate__(self):
+        d = self.__dict__
+        d['__meta_type'] = self.__meta_type
 
-        metaclass = type("Object", (Meta,), {'_meta_type': meta_type})
-        return metaclass(**attrib)
+        return d
+
+    def __setstate__(self, d):
+        self.__meta_type = d['__meta_type']
+        del(d['__meta_type'])
+
+        self.__dict__.update(d)
 

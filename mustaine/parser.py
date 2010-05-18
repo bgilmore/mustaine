@@ -248,7 +248,7 @@ class Parser(object):
             code = self._read(1)
 
         if cast:
-            return Magic(cast, **fields)
+            return Object(cast, **fields)
         else:
             return fields
 
