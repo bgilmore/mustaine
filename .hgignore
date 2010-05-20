@@ -3,3 +3,4 @@ syntax: glob
 *.pyo
 build/*
 dist/*
+test/server/target/*
