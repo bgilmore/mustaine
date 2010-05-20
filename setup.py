@@ -16,6 +16,6 @@ setup(
     license = "BSD",
 
     platforms = "any",
-    py_modules = [ "mustaine" ],
+    packages = [ "mustaine" ],
 )
 
