@@ -1,0 +1,3 @@
+include README
+include test/server/pom.xml
+recursive-include test/server/src *
