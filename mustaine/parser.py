@@ -16,7 +16,7 @@ class ParseError(Exception):
 
 class Parser(object):
     def parse_string(self, string):
-        if isinstance(string, UnicodeType):
+        if isinstance(string, unicode):
             stream = StringIO(string.encode('utf-8'))
         else:
             stream = StringIO(string)
@@ -253,11 +253,8 @@ class Parser(object):
             return fields
 
     def _read_fault(self):
-        f = Fault()
-        for _ in range(3):
-            key, value = self._read_keyval()
-            setattr(f, key, value)
-        return f
+        fault = self._read_map()
+        return Fault(fault['code'], fault['message'])
 
     def _read_keyval(self, first=None):
         key   = self._read_object(first or self._read(1))

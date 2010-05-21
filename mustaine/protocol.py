@@ -79,10 +79,15 @@ class Reply(object):
 
 
 class Fault(Exception):
-    def __init__(self, code=None, message=None, detail=None):
+    def __init__(self, code, message):
         self.code    = code
-        self.message = message
-        self.detail  = detail
+        self.message = message 
+
+    def __repr__(self):
+        return "<mustaine.protocol.Fault: \"{0}: {1}\">".format(self.code, self.message)
+
+    def __str__(self):
+        return self.__repr__()
 
 
 class Binary(object):
