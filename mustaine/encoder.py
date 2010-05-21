@@ -171,7 +171,7 @@ def encode_call(call):
         elif hasattr(arg, '_meta_type'):
             encoder = ENCODERS[DictType]
         else:
-            raise TypeError("mustaine.encoder cannot serialize {0}".format(type(obj)))
+            raise TypeError("mustaine.encoder cannot serialize {0}".format(type(arg)))
 
         data_type, arg = encoder(arg)
         if call.overload:

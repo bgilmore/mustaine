@@ -118,6 +118,10 @@ class Object(object):
         for key in kwargs:
             self.__dict__[key] = kwargs[key]
 
+    @property
+    def _meta_type(self):
+        return self.__meta_type
+
     def __repr__(self):
         return "<{0} object at {1}>".format(self.__meta_type, hex(id(self)))
 
