@@ -89,6 +89,8 @@ class HessianProxy(object):
             raise ProtocolError(self._uri.geturl(), response.status, response.reason)
 
         reply = self._parser.parse_stream(response)
+        self._client.close()
+
         if isinstance(reply.value, Fault):
             raise reply.value
         else:
