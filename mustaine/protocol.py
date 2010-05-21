@@ -79,9 +79,19 @@ class Reply(object):
 
 
 class Fault(Exception):
-    def __init__(self, code, message):
+    def __init__(self, code, message, detail):
         self.code    = code
         self.message = message 
+        self.detail  = detail
+
+    # 'message' property implemented to mask DeprecationWarning
+    @property
+    def message(self):
+        return self.__message
+
+    @message.setter
+    def message(self, message):
+        self.__message = message
 
     def __repr__(self):
         return "<mustaine.protocol.Fault: \"{0}: {1}\">".format(self.code, self.message)

@@ -254,7 +254,7 @@ class Parser(object):
 
     def _read_fault(self):
         fault = self._read_map()
-        return Fault(fault['code'], fault['message'])
+        return Fault(fault['code'], fault['message'], fault.get('detail'))
 
     def _read_keyval(self, first=None):
         key   = self._read_object(first or self._read(1))
