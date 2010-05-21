@@ -27,8 +27,6 @@ def returns(data_type):
 def encode_object(obj):
     if type(obj) in ENCODERS:
         encoder = ENCODERS[type(obj)]
-    elif hasattr(obj, '_meta_type'):
-        encoder = ENCODERS[DictType]
     else:
         raise TypeError("mustaine.encoder cannot serialize {0}".format(type(obj)))
     
@@ -115,21 +113,27 @@ def encode_tuple(obj):
     encoded = ''.join(map(encode_object, obj))
     return pack('>2cl', 'V', 'l', len(obj)) + encoded + 'z'
 
+def encode_keyval(pair):
+    return ''.join((encode_object(pair[0]), encode_object(pair[1])))
+
 @encoder_for(DictType)
 @returns('map')
 def encode_map(obj):
-    def encode_pair(pair):
-        return ''.join((encode_object(pair[0]), encode_object(pair[1])))
+    encoded = ''.join(map(encode_keyval, obj.items()))
+    return pack('>c', 'M') + encoded + 'z'
 
-    encoded = ''.join(map(encode_pair, obj.items()))
+@encoder_for(Object)
+@returns('map')
+def encode_mobject(obj):
+    encoded  = pack('>cH', 't', len(obj._meta_type)) + obj._meta_type
+    members  = obj.__getstate__()
+    del members['__meta_type'] # this is here for pickling. we don't want or need it
 
-    if hasattr(obj, '_meta_type'):
-        encoded = pack('>cH', 't', len(obj._meta_type)) + obj._meta_type + encoded
-
+    encoded += ''.join(map(encode_keyval, members.items()))
     return pack('>c', 'M') + encoded + 'z'
 
 @encoder_for(Remote)
-@returns('map')
+@returns('remote')
 def encode_remote(obj):
     encoded = encode_string(obj.url)
     return pack('>2cH', 'r', 't', len(obj.type_name)) + obj.type_name + encoded
@@ -168,8 +172,6 @@ def encode_call(call):
     for arg in call.args:
         if type(arg) in ENCODERS:
             encoder = ENCODERS[type(arg)]
-        elif hasattr(arg, '_meta_type'):
-            encoder = ENCODERS[DictType]
         else:
             raise TypeError("mustaine.encoder cannot serialize {0}".format(type(arg)))
 

@@ -126,14 +126,21 @@ class Object(object):
         return "<{0} object at {1}>".format(self.__meta_type, hex(id(self)))
 
     def __getstate__(self):
-        d = self.__dict__
-        d['__meta_type'] = self.__meta_type
+        # clear metadata for clean pickling
+        t = self.__meta_type
+        del self.__meta_type
+
+        d = self.__dict__.copy()
+        d['__meta_type'] = t
+
+        # restore metadata
+        self.__meta_type = t
 
         return d
 
     def __setstate__(self, d):
         self.__meta_type = d['__meta_type']
-        del(d['__meta_type'])
+        del d['__meta_type']
 
         self.__dict__.update(d)
 
