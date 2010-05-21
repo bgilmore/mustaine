@@ -5,7 +5,7 @@ import base64
 from mustaine.encoder import encode_object
 from mustaine.parser import Parser
 from mustaine.protocol import Call, Reply, Fault
-import __version__
+from mustaine import __version__
 
 
 class ProtocolError(Exception):
@@ -24,7 +24,7 @@ class ProtocolError(Exception):
 
 class HessianProxy(object):
     _headers = [
-                ('User-Agent', 'mustaine/' + __version__.VERSION_STRING),
+                ('User-Agent', 'mustaine/' + __version__),
                 ('Content-Type', 'application/x-hessian'),
                ]
 
