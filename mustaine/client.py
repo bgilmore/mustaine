@@ -23,14 +23,14 @@ class ProtocolError(Exception):
 
 
 class HessianProxy(object):
-    _headers = [
-                ('User-Agent', 'mustaine/' + __version__),
-                ('Content-Type', 'application/x-hessian'),
-               ]
-
+	
     _parser  = Parser()
 
     def __init__(self, service_uri, credentials=None, key_file=None, cert_file=None, timeout=10):
+		self._headers = list()
+		self._headers.append(('User-Agent', 'mustaine/' + __version__,))
+		self._headers.append(('Content-Type', 'application/x-hessian',))
+		
         self._uri = urlparse(service_uri)
 
         if self._uri.scheme == 'http':
