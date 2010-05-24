@@ -19,4 +19,6 @@ public interface ITestService
   public String returnString(String s);
   
   public String callThrowsException();
+
+	public TemperatureOverview objTest();
 }

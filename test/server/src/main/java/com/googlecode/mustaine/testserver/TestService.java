@@ -3,8 +3,10 @@ package com.googlecode.mustaine.testserver;
 import com.caucho.hessian.server.HessianServlet;
 import java.util.Date;
 
+import com.googlecode.mustaine.testserver.TemperatureOverview;
+
 public class TestService extends HessianServlet implements ITestService
-{  
+{
   public void emptyCall() {
     ;
   }
@@ -36,4 +38,14 @@ public class TestService extends HessianServlet implements ITestService
   public String callThrowsException() {
       throw new IllegalArgumentException("Your argument is illegal!");
   }
+
+	public TemperatureOverview objTest() {
+			TemperatureOverview obj = new TemperatureOverview();
+			
+			obj.setGreenAssetCount(3);
+			obj.setYellowAssetCount(2);
+			obj.setRedAssetCount(1);
+			
+			return obj;
+	}
 }

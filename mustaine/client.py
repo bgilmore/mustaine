@@ -23,14 +23,14 @@ class ProtocolError(Exception):
 
 
 class HessianProxy(object):
-	
+    
     _parser  = Parser()
 
     def __init__(self, service_uri, credentials=None, key_file=None, cert_file=None, timeout=10):
-		self._headers = list()
-		self._headers.append(('User-Agent', 'mustaine/' + __version__,))
-		self._headers.append(('Content-Type', 'application/x-hessian',))
-		
+        self._headers = list()
+        self._headers.append(('User-Agent', 'mustaine/' + __version__,))
+        self._headers.append(('Content-Type', 'application/x-hessian',))
+        
         self._uri = urlparse(service_uri)
 
         if self._uri.scheme == 'http':
@@ -86,7 +86,16 @@ class HessianProxy(object):
         
         response = self._client.getresponse()
         if response.status != 200:
+            self._client.close()
             raise ProtocolError(self._uri.geturl(), response.status, response.reason)
+
+        length = response.getheader('Content-Length', None)
+        if not length:
+            self._client.close()
+            raise ProtocolError(self._uri.geturl(), 'FATAL:', 'Server omitted Content-Length header')
+        elif length == '0':
+            self._client.close()
+            raise ProtocolError(self._uri.geturl(), 'FATAL:', 'Server sent zero-length response')
 
         reply = self._parser.parse_stream(response)
         self._client.close()
