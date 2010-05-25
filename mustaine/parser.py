@@ -149,8 +149,7 @@ class Parser(object):
         elif code == 'r':
             return self._read_remote()
         elif code == 'R':
-            # TODO: reference parsing
-            raise NotImplementedError("Reference parsing not yet supported")
+            return self._refs[unpack(">L", self._read(4))[0]]
         elif code == 'V':
             return self._read_list()
         elif code == 'M':
@@ -200,57 +199,59 @@ class Parser(object):
         r.url = self._read_object(code)
         return r
 
-    def _read_reference(self):
-        pass # not yet
-
     def _read_list(self):
-        cast = list
         code = self._read(1)
 
         if code == 't':
-            # Python doesn't natively support typed lists, so unless we get a feature request
-            # to implement a non-native typed vector, we're going to silently discard the type
+            # read and discard list type
             self._read(unpack('>H', self._read(2))[0])
             code = self._read(1)
 
         if code == 'l':
-            # A length was sent with the list, so we'll deserialize this as a tuple. However,
-            # the length is irrelevant for decoding so we'll discard it.
+            # read and discard list length
             self._read(4)
             code = self._read(1)
-            cast = tuple
 
-        members = list()
+        result = []
+        self._refs.append(result)
+
         while code != 'z':
-            members.append(self._read_object(code))
+            result.append(self._read_object(code))
             code = self._read(1)
 
-        return cast(members)
+        return result
 
     def _read_map(self):
-        cast = None
         code = self._read(1)
 
         if code == 't':
-            # a typed map deserializes to an object rather than a dict
-            cast = self._read(unpack('>H', self._read(2))[0])
-            code = self._read(1)
+            # a typed map deserializes to an object
+            result = Object(self._read(unpack('>H', self._read(2))[0]))
+            code   = self._read(1)
+        else:
+            # untyped maps deserialize to a dict
+            result = {}
         
-        fields = dict()
+        self._refs.append(result)
+        
+        fields = {}
         while code != 'z':
             key, value  = self._read_keyval(code)
 
-            if cast:
+            if isinstance(result, Object):
                 fields[str(key)] = value
             else:
                 fields[key] = value
 
             code = self._read(1)
-
-        if cast:
-            return Object(cast, **fields)
+        
+        if isinstance(result, Object):
+            fields['__meta_type'] = result._meta_type
+            result.__setstate__(fields)
         else:
-            return fields
+            result.update(fields)
+
+        return result
 
     def _read_fault(self):
         fault = self._read_map()

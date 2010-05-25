@@ -89,11 +89,8 @@ class HessianProxy(object):
             self._client.close()
             raise ProtocolError(self._uri.geturl(), response.status, response.reason)
 
-        length = response.getheader('Content-Length', None)
-        if not length:
-            self._client.close()
-            raise ProtocolError(self._uri.geturl(), 'FATAL:', 'Server omitted Content-Length header')
-        elif length == '0':
+        length = response.getheader('Content-Length', -1)
+        if length == '0':
             self._client.close()
             raise ProtocolError(self._uri.geturl(), 'FATAL:', 'Server sent zero-length response')
 

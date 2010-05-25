@@ -39,6 +39,21 @@ public class TestService extends HessianServlet implements ITestService
       throw new IllegalArgumentException("Your argument is illegal!");
   }
 
+	public TemperatureOverview[] getShit() {
+			TemperatureOverview[] shit = new TemperatureOverview[2];
+			TemperatureOverview obj = new TemperatureOverview();
+			
+			obj.setGreenAssetCount(3);
+			obj.setYellowAssetCount(2);
+			obj.setRedAssetCount(1);
+			
+			shit[0] = shit;
+			shit[1] = obj;
+			
+			
+			return shit;
+	}
+
 	public TemperatureOverview objTest() {
 			TemperatureOverview obj = new TemperatureOverview();
 			

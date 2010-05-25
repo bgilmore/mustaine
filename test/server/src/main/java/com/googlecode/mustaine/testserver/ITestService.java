@@ -20,5 +20,7 @@ public interface ITestService
   
   public String callThrowsException();
 
+	public TemperatureOverview[] getShit();
+
 	public TemperatureOverview objTest();
 }

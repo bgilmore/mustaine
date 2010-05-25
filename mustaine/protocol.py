@@ -115,8 +115,9 @@ class Object(object):
     def __init__(self, meta_type, **kwargs):
         self.__meta_type = meta_type
 
-        for key in kwargs:
-            self.__dict__[key] = kwargs[key]
+        if kwargs:
+            for key in kwargs:
+                self.__dict__[key] = kwargs[key]
 
     @property
     def _meta_type(self):
