@@ -26,13 +26,13 @@ class HessianProxy(object):
     
     _parser  = Parser()
 
-    def __init__(self, service_uri, credentials=None, key_file=None, cert_file=None, timeout=10):
+    def __init__(self, service_uri, credentials=None, key_file=None, cert_file=None, timeout=10, error_factory=lambda x: x):
         self._headers = list()
         self._headers.append(('User-Agent', 'mustaine/' + __version__,))
         self._headers.append(('Content-Type', 'application/x-hessian',))
         
         self._uri = urlparse(service_uri)
-
+        
         if self._uri.scheme == 'http':
             self._client = HTTPConnection(self._uri.hostname,
                                           self._uri.port or 80,
@@ -55,7 +55,8 @@ class HessianProxy(object):
         if credentials:
             auth = 'Basic ' + base64.b64encode(':'.join(credentials))
             self._headers.append(('Authorization', auth))
-    
+        
+        self._error_factory = error_factory
     
     class __AutoMethod(object):
         # dark magic for autoloading methods
@@ -98,7 +99,7 @@ class HessianProxy(object):
         self._client.close()
 
         if isinstance(reply.value, Fault):
-            raise reply.value
+            raise self._error_factory(reply.value)
         else:
             return reply.value
 

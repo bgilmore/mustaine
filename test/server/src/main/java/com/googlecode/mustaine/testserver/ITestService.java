@@ -19,8 +19,15 @@ public interface ITestService
   public String returnString(String s);
   
   public String callThrowsException();
+<<<<<<< local
+  
+  public Person callReturnsPerson();
+  
+  public Person callTakesPerson(Person person);
+=======
 
 	public TemperatureOverview[] getShit();
 
 	public TemperatureOverview objTest();
+>>>>>>> other
 }

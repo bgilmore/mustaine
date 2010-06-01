@@ -16,7 +16,7 @@ class TestSimpleClient(unittest.TestCase):
     """
         
     def setUp(self):
-        self.service = HessianProxy("http://localhost:8080/Test.service")
+        self.service = HessianProxy("http://localhost:8088/Test.service")
     
     def test_WriteInt(self):
         self.assertEqual(43, self.service.returnInt(43))
@@ -60,8 +60,9 @@ if __name__ == '__main__':
     Builds the Java server and runs the integration tests.
     """
     
-    p = buildAndStartJavaServer()
+    #p = buildAndStartJavaServer()
     try:
         unittest.main()
     finally:
-        stopJavaServer(p)
+        pass
+        #stopJavaServer(p)
