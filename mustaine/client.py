@@ -24,8 +24,6 @@ class ProtocolError(Exception):
 
 class HessianProxy(object):
     
-    _parser  = Parser()
-
     def __init__(self, service_uri, credentials=None, key_file=None, cert_file=None, timeout=10, error_factory=lambda x: x):
         self._headers = list()
         self._headers.append(('User-Agent', 'mustaine/' + __version__,))
@@ -57,6 +55,7 @@ class HessianProxy(object):
             self._headers.append(('Authorization', auth))
         
         self._error_factory = error_factory
+        self._parser = Parser()
     
     class __AutoMethod(object):
         # dark magic for autoloading methods
