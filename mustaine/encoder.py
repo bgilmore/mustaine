@@ -29,13 +29,13 @@ def encode_object(obj):
         encoder = ENCODERS[type(obj)]
     else:
         raise TypeError("mustaine.encoder cannot serialize {0}".format(type(obj)))
-    
+
     return encoder(obj)[1]
 
 
 @encoder_for(NoneType)
 @returns('null')
-def encode_null(value):
+def encode_null(_):
     return 'N'
 
 @encoder_for(BooleanType)
@@ -185,6 +185,6 @@ def encode_call(call):
     encoded += pack('>cH', 'm', len(method)) + method
     encoded += arguments
     encoded += 'z'
-    
+
     return encoded
 

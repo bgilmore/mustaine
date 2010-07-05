@@ -131,7 +131,7 @@ class Parser(object):
         elif code == 'd':
             return self._read_date()
         elif code == 's' or code == 'x':
-            fragment = self._read_string() 
+            fragment = self._read_string()
             next     = self._read(1)
             if next.lower() == code:
                 return fragment + self._read_object(next)
@@ -143,7 +143,9 @@ class Parser(object):
             fragment = self._read_binary()
             next     = self._read(1)
             if next.lower() == code:
-                return fragment + self._read_binary(next)
+                return fragment + self._read_object(next)
+            else:
+                raise ParseError("Expected terminal binary segment, got {0!r}".format(next))
         elif code == 'B':
             return self._read_binary()
         elif code == 'r':
@@ -159,11 +161,11 @@ class Parser(object):
 
     def _read_date(self):
         timestamp = unpack('>q', self._read(8))[0]
-        return datetime.datetime.fromtimestamp(timestamp / 1000) 
-    
+        return datetime.datetime.fromtimestamp(timestamp / 1000)
+
     def _read_string(self):
         len = unpack('>H', self._read(2))[0]
-        
+
         bytes = []
         while len > 0:
             byte = self._read(1)
@@ -176,7 +178,7 @@ class Parser(object):
             elif ord(byte) in range(0xF0, 0xF4):
                 bytes.append(byte + self._read(3))
             len -= 1
-        
+
         return ''.join(bytes).decode('utf-8')
 
     def _read_binary(self):
@@ -231,9 +233,9 @@ class Parser(object):
         else:
             # untyped maps deserialize to a dict
             result = {}
-        
+
         self._refs.append(result)
-        
+
         fields = {}
         while code != 'z':
             key, value  = self._read_keyval(code)
@@ -244,7 +246,7 @@ class Parser(object):
                 fields[key] = value
 
             code = self._read(1)
-        
+
         if isinstance(result, Object):
             fields['__meta_type'] = result._meta_type
             result.__setstate__(fields)
