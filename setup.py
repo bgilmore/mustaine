@@ -3,33 +3,18 @@ from setuptools import find_packages, setup
 from mustaine import __version__
 
 if sys.version_info < (2,6):
-    raise NotImplementedError("Sorry, you need at least Python 2.6 to use mustaine")
+    raise NotImplementedError("mustaine requires Python 2.6 or later")
 
 setup(
     name = "mustaine",
     version = __version__,
     description = "Hessian RPC Library",
-    long_description = """\
-About
-=====
-
-Mustaine is a Python implemention of the `Hessian 1.0.2 specification
-<http://hessian.caucho.com/doc/hessian-1.0-spec.xtp>`). Currently, it provides a standard
-HTTP-based client as well as a generic (de/)serialization library.
-
-Usage
-=====
-
-  from mustaine.client import HessianProxy
-  service = HessianProxy("http://hessian.caucho.com/test/test")
-  print service.replyDate_1()
-
-Source
-======
-
-Up-to-date sources and documentation can always be found at the `mustaine GoogleCode site
-<http://code.google.com/p/mustaine/>`_.
-    """,
+    long_description = file(
+        os.path.join(
+            os.path.dirname(__file__),
+            'README.rst'
+        )
+    ).read(),
 
     classifiers = [
         'Development Status :: 3 - Alpha',
