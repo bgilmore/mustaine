@@ -33,7 +33,6 @@ Up-to-date sources and documentation can always be found at the `mustaine Google
 
     classifiers = [
         'Development Status :: 3 - Alpha',
-        'Environment :: Web Environment',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
         'Operating System :: OS Independent',
