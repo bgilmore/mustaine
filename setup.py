@@ -1,4 +1,4 @@
-import sys
+import os, sys
 from setuptools import find_packages, setup
 from mustaine import __version__
 
