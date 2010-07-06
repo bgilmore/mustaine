@@ -48,6 +48,7 @@ Up-to-date sources and documentation can always be found at the `mustaine Google
     license = "BSD",
 
     platforms = "any",
-    packages = find_packages(exclude=["test"])
+    packages = find_packages(exclude=["test"]),
+    zip_safe = True,
 )
 
