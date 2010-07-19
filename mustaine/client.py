@@ -75,30 +75,31 @@ class HessianProxy(object):
         return self.__repr__()
 
     def __call__(self, method, args):
-        self._client.putrequest('POST', self._uri.path)
-        for header in self._headers:
-            self._client.putheader(*header)
+        try:
+            self._client.putrequest('POST', self._uri.path)
+            for header in self._headers:
+                self._client.putheader(*header)
 
-        request = encode_object(Call(method, args))
-        self._client.putheader("Content-Length", str(len(request)))
-        self._client.endheaders()
-        self._client.send(str(request))
+            request = encode_object(Call(method, args))
+            self._client.putheader("Content-Length", str(len(request)))
+            self._client.endheaders()
+            self._client.send(str(request))
 
-        response = self._client.getresponse()
-        if response.status != 200:
+            response = self._client.getresponse()
+            if response.status != 200:
+                raise ProtocolError(self._uri.geturl(), response.status, response.reason)
+
+            length = response.getheader('Content-Length', -1)
+            if length == '0':
+                raise ProtocolError(self._uri.geturl(), 'FATAL:', 'Server sent zero-length response')
+
+            reply = self._parser.parse_stream(response)
             self._client.close()
-            raise ProtocolError(self._uri.geturl(), response.status, response.reason)
 
-        length = response.getheader('Content-Length', -1)
-        if length == '0':
+            if isinstance(reply.value, Fault):
+                raise self._error_factory(reply.value)
+            else:
+                return reply.value
+        except:
             self._client.close()
-            raise ProtocolError(self._uri.geturl(), 'FATAL:', 'Server sent zero-length response')
-
-        reply = self._parser.parse_stream(response)
-        self._client.close()
-
-        if isinstance(reply.value, Fault):
-            raise self._error_factory(reply.value)
-        else:
-            return reply.value
-
+            raise
