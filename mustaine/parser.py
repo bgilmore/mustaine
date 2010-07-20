@@ -227,9 +227,14 @@ class Parser(object):
         code = self._read(1)
 
         if code == 't':
-            # a typed map deserializes to an object
-            result = Object(self._read(unpack('>H', self._read(2))[0]))
-            code   = self._read(1)
+            type_len = unpack('>H', self._read(2))[0]
+            if type_len > 0:
+                # a typed map deserializes to an object
+                result = Object(self._read(type_len))
+            else:
+                result = {}
+
+            code = self._read(1)
         else:
             # untyped maps deserialize to a dict
             result = {}
