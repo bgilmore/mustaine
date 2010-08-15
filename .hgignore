@@ -1,7 +1,0 @@
-syntax: glob
-.idea
-*.pyc
-*.pyo
-build/*
-dist/*
-test/server/target/*
