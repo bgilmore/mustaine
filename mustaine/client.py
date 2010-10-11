@@ -34,15 +34,13 @@ class HessianProxy(object):
         if self._uri.scheme == 'http':
             self._client = HTTPConnection(self._uri.hostname,
                                           self._uri.port or 80,
-                                          strict=True,
-                                          timeout=timeout)
+                                          strict=True)
         elif self._uri.scheme == 'https':
             self._client = HTTPSConnection(self._uri.hostname,
                                            self._uri.port or 443,
                                            key_file=key_file,
                                            cert_file=cert_file,
-                                           strict=True,
-                                           timeout=timeout)
+                                           strict=True)
         else:
             raise NotImplementedError("HessianProxy only supports http:// and https:// URIs")
 
