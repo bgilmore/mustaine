@@ -94,7 +94,7 @@ class Fault(Exception):
         self.__message = message
 
     def __repr__(self):
-        return "<mustaine.protocol.Fault: \"{0}: {1}\">".format(self.code, self.message)
+        return "<mustaine.protocol.Fault: \"%s: %s\">" % (self.code, self.message,)
 
     def __str__(self):
         return self.__repr__()
@@ -124,7 +124,7 @@ class Object(object):
         return self.__meta_type
 
     def __repr__(self):
-        return "<{0} object at {1}>".format(self.__meta_type, hex(id(self)))
+        return "<{0} object at {1}>" % (self.__meta_type, hex(id(self)),)
 
     def __getstate__(self):
         # clear metadata for clean pickling

@@ -28,7 +28,7 @@ def encode_object(obj):
     if type(obj) in ENCODERS:
         encoder = ENCODERS[type(obj)]
     else:
-        raise TypeError("mustaine.encoder cannot serialize {0}".format(type(obj)))
+        raise TypeError("mustaine.encoder cannot serialize %s" % (type(obj),))
 
     return encoder(obj)[1]
 
@@ -173,7 +173,7 @@ def encode_call(call):
         if type(arg) in ENCODERS:
             encoder = ENCODERS[type(arg)]
         else:
-            raise TypeError("mustaine.encoder cannot serialize {0}".format(type(arg)))
+            raise TypeError("mustaine.encoder cannot serialize %s" % (type(arg),))
 
         data_type, arg = encoder(arg)
         if call.overload:
