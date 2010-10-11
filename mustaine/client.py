@@ -56,7 +56,7 @@ class HessianProxy(object):
         self._error_factory = error_factory
         self._parser = Parser()
 
-    class __AutoMethod(object):
+    class __RemoteMethod(object):
         # dark magic for autoloading methods
         def __init__(self, caller, method):
             self.__caller = caller
@@ -65,7 +65,7 @@ class HessianProxy(object):
             return self.__caller(self.__method, args)
 
     def __getattr__(self, method):
-        return self.__AutoMethod(self, method)
+        return self.__RemoteMethod(self, method)
 
     def __repr__(self):
         return "<mustaine.client.HessianProxy(\"%s\")>" % (self._uri.geturl(),)
