@@ -1,6 +1,8 @@
 from httplib import HTTPConnection, HTTPSConnection
 from urlparse import urlparse
+from warnings import warn
 import base64
+import sys
 
 from mustaine.encoder import encode_object
 from mustaine.parser import Parser
@@ -22,6 +24,7 @@ class ProtocolError(Exception):
     def __repr__(self):
         return "<ProtocolError for %s: %s %s>" % (self._url, self._status, self._reason,)
 
+
 class HessianProxy(object):
 
     def __init__(self, service_uri, credentials=None, key_file=None, cert_file=None, timeout=10, buffer_size=65535, error_factory=lambda x: x):
@@ -29,18 +32,25 @@ class HessianProxy(object):
         self._headers.append(('User-Agent', 'mustaine/' + __version__,))
         self._headers.append(('Content-Type', 'application/x-hessian',))
 
-        self._uri = urlparse(service_uri)
+        if sys.version_info < (2,6):
+            warn('HessianProxy timeout not enforceable before Python 2.6', RuntimeWarning, stacklevel=2)
+            timeout = {}
+        else:
+            timeout = {'timeout': timeout}
 
+        self._uri = urlparse(service_uri)
         if self._uri.scheme == 'http':
             self._client = HTTPConnection(self._uri.hostname,
                                           self._uri.port or 80,
-                                          strict=True)
+                                          strict=True,
+                                          **timeout)
         elif self._uri.scheme == 'https':
             self._client = HTTPSConnection(self._uri.hostname,
                                            self._uri.port or 443,
                                            key_file=key_file,
                                            cert_file=cert_file,
-                                           strict=True)
+                                           strict=True,
+                                           **timeout)
         else:
             raise NotImplementedError("HessianProxy only supports http:// and https:// URIs")
 
