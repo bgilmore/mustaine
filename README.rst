@@ -22,4 +22,4 @@ Source
 ------
 
 Up-to-date sources and documentation can always be found at the `mustaine
-GoogleCode site <http://code.google.com/p/mustaine/>`_.
+GitHub site <http://github.com/bgilmore/mustaine>`_.

@@ -17,7 +17,7 @@ setup(
     ).read(),
 
     classifiers = [
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
         'Operating System :: OS Independent',
@@ -26,10 +26,10 @@ setup(
         'Topic :: Software Development :: Libraries',
     ],
 
-    url = "http://code.google.com/p/mustaine",
+    url = "http://github.com/bgilmore/mustaine",
 
-    maintainer = "Brandon Gilmore",
-    maintainer_email = "brandon@mg2.org",
+    author = "Brandon Gilmore",
+    author_email = "brandon@mg2.org",
     license = "BSD",
 
     platforms = "any",
