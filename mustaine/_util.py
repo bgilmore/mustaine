@@ -9,7 +9,12 @@ class BufferedReader(object):
         self.__input       = input
         self.__buffer_size = buffer_size
         self.__buffer      = StringIO()
-        self.__byte_count  = 0
+
+        # initial fill
+        chunk = input.read(buffer_size)
+        self.__byte_count = len(chunk)
+        self.__buffer.write(chunk)
+        self.__buffer.seek(0)
 
     def read(self, byte_count):
         difference = byte_count - self.__byte_count

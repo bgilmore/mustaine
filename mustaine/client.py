@@ -1,10 +1,13 @@
 from httplib import HTTPConnection, HTTPSConnection
 from urlparse import urlparse
+from warnings import warn
 import base64
+import sys
 
 from mustaine.encoder import encode_object
 from mustaine.parser import Parser
 from mustaine.protocol import Call, Fault
+from mustaine._util import BufferedReader
 from mustaine import __version__
 
 
@@ -19,30 +22,35 @@ class ProtocolError(Exception):
         return self.__repr__()
 
     def __repr__(self):
-        return "<ProtocolError for {0}: {1} {2}>".format(self._url, self._status, self._reason)
+        return "<ProtocolError for %s: %s %s>" % (self._url, self._status, self._reason,)
 
 
 class HessianProxy(object):
 
-    def __init__(self, service_uri, credentials=None, key_file=None, cert_file=None, timeout=10, error_factory=lambda x: x):
+    def __init__(self, service_uri, credentials=None, key_file=None, cert_file=None, timeout=10, buffer_size=65535, error_factory=lambda x: x):
         self._headers = list()
         self._headers.append(('User-Agent', 'mustaine/' + __version__,))
         self._headers.append(('Content-Type', 'application/x-hessian',))
 
-        self._uri = urlparse(service_uri)
+        if sys.version_info < (2,6):
+            warn('HessianProxy timeout not enforceable before Python 2.6', RuntimeWarning, stacklevel=2)
+            timeout = {}
+        else:
+            timeout = {'timeout': timeout}
 
+        self._uri = urlparse(service_uri)
         if self._uri.scheme == 'http':
             self._client = HTTPConnection(self._uri.hostname,
                                           self._uri.port or 80,
                                           strict=True,
-                                          timeout=timeout)
+                                          **timeout)
         elif self._uri.scheme == 'https':
             self._client = HTTPSConnection(self._uri.hostname,
                                            self._uri.port or 443,
                                            key_file=key_file,
                                            cert_file=cert_file,
                                            strict=True,
-                                           timeout=timeout)
+                                           **timeout)
         else:
             raise NotImplementedError("HessianProxy only supports http:// and https:// URIs")
 
@@ -54,10 +62,11 @@ class HessianProxy(object):
             auth = 'Basic ' + base64.b64encode(':'.join(credentials))
             self._headers.append(('Authorization', auth))
 
+        self._buffer_size = buffer_size
         self._error_factory = error_factory
         self._parser = Parser()
 
-    class __AutoMethod(object):
+    class __RemoteMethod(object):
         # dark magic for autoloading methods
         def __init__(self, caller, method):
             self.__caller = caller
@@ -66,10 +75,10 @@ class HessianProxy(object):
             return self.__caller(self.__method, args)
 
     def __getattr__(self, method):
-        return self.__AutoMethod(self, method)
+        return self.__RemoteMethod(self, method)
 
     def __repr__(self):
-        return "<mustaine.client.HessianProxy(\"{url}\")>".format(url=self._uri.geturl())
+        return "<mustaine.client.HessianProxy(\"%s\")>" % (self._uri.geturl(),)
 
     def __str__(self):
         return self.__repr__()
@@ -93,7 +102,7 @@ class HessianProxy(object):
             if length == '0':
                 raise ProtocolError(self._uri.geturl(), 'FATAL:', 'Server sent zero-length response')
 
-            reply = self._parser.parse_stream(response)
+            reply = self._parser.parse_stream(BufferedReader(response, buffer_size=self._buffer_size))
             self._client.close()
 
             if isinstance(reply.value, Fault):

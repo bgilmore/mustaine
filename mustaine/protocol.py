@@ -8,34 +8,32 @@ class Call(object):
         self._headers  = headers or dict()
         self._overload = overload or False
 
-    @property
-    def method(self):
+    def _get_method(self):
         return self._method
 
-    @method.setter
-    def method(self, value):
+    def _set_method(self, value):
         if isinstance(value, str):
             self._method = value
         else:
             raise TypeError("Call.method must be a string")
 
-    @property
-    def args(self):
+    method = property(_get_method, _set_method)
+
+    def _get_args(self):
         return self._args
 
-    @args.setter
-    def args(self, value):
+    def _set_args(self, value):
         if hasattr(value, '__iter__'):
             self._args = value
         else:
             raise TypeError("Call.args must be an iterable value")
 
-    @property
-    def headers(self):
+    args = property(_get_args, _set_args)
+
+    def _get_headers(self):
         return self._headers
 
-    @headers.setter
-    def headers(self, value):
+    def _set_headers(self, value):
         if not isinstance(value, dict):
             raise TypeError("Call.headers must be a dict of strings to objects")
 
@@ -45,16 +43,18 @@ class Call(object):
 
         self._headers = value
 
-    @property
-    def overload(self):
+    headers = property(_get_headers, _set_headers)
+
+    def _get_overload(self):
         return self._overload
 
-    @overload.setter
-    def overload(self, value):
+    def _set_overload(self, value):
         if isinstance(value, bool):
             self._overload = value
         else:
             raise TypeError("Call.overload must be True or False")
+
+    overload = property(_get_overload, _set_overload)
 
 
 class Reply(object):
@@ -62,12 +62,10 @@ class Reply(object):
         self.value    = value # unmanaged property
         self._headers = headers or dict()
 
-    @property
-    def headers(self):
+    def _get_headers(self):
         return self._headers
 
-    @headers.setter
-    def headers(self, value):
+    def _set_headers(self, value):
         if not isinstance(value, dict):
             raise TypeError("Call.headers must be a dict of strings to objects")
 
@@ -76,6 +74,8 @@ class Reply(object):
                 raise TypeError("Call.headers must be a dict of strings to objects")
 
         self._headers = value
+
+    headers = property(_get_headers, _set_headers)
 
 
 class Fault(Exception):
@@ -85,16 +85,16 @@ class Fault(Exception):
         self.detail  = detail
 
     # 'message' property implemented to mask DeprecationWarning
-    @property
-    def message(self):
+    def _get_message(self):
         return self.__message
 
-    @message.setter
-    def message(self, message):
+    def _set_message(self, message):
         self.__message = message
 
+    message = property(_get_message, _set_message)
+
     def __repr__(self):
-        return "<mustaine.protocol.Fault: \"{0}: {1}\">".format(self.code, self.message)
+        return "<mustaine.protocol.Fault: \"%s: %s\">" % (self.code, self.message,)
 
     def __str__(self):
         return self.__repr__()
@@ -124,7 +124,7 @@ class Object(object):
         return self.__meta_type
 
     def __repr__(self):
-        return "<{0} object at {1}>".format(self.__meta_type, hex(id(self)))
+        return "<{0} object at {1}>" % (self.__meta_type, hex(id(self)),)
 
     def __getstate__(self):
         # clear metadata for clean pickling

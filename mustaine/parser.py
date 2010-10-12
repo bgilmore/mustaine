@@ -41,7 +41,7 @@ class Parser(object):
 
                 version = self._read(2)
                 if version != '\x01\x00':
-                    raise ParseError("Encountered unrecognized call version {0!r}".format(version))
+                    raise ParseError("Encountered unrecognized call version %r" % (version,))
 
                 self._result = Call()
                 continue
@@ -52,14 +52,14 @@ class Parser(object):
 
                 version = self._read(2)
                 if version != '\x01\x00':
-                    raise ParseError("Encountered unrecognized reply version {0!r}".format(version))
+                    raise ParseError("Encountered unrecognized reply version %r" % (version,))
 
                 self._result = Reply()
                 continue
 
             else:
                 if not self._result:
-                    raise ParseError("Invalid Hessian message marker: {0!r}".format(code))
+                    raise ParseError("Invalid Hessian message marker: %r" % (code,))
 
                 if   code == 'H':
                     key, value = self._read_keyval()
@@ -136,7 +136,7 @@ class Parser(object):
             if next.lower() == code:
                 return fragment + self._read_object(next)
             else:
-                raise ParseError("Expected terminal string segment, got {0!r}".format(next))
+                raise ParseError("Expected terminal string segment, got %r" % (next,))
         elif code == 'S' or code == 'X':
             return self._read_string()
         elif code == 'b':
@@ -145,7 +145,7 @@ class Parser(object):
             if next.lower() == code:
                 return fragment + self._read_object(next)
             else:
-                raise ParseError("Expected terminal binary segment, got {0!r}".format(next))
+                raise ParseError("Expected terminal binary segment, got %r" % (next,))
         elif code == 'B':
             return self._read_binary()
         elif code == 'r':
@@ -157,7 +157,7 @@ class Parser(object):
         elif code == 'M':
             return self._read_map()
         else:
-            raise ParseError("Unknown type marker {0!r}".format(code))
+            raise ParseError("Unknown type marker %r" % (code,))
 
     def _read_date(self):
         timestamp = unpack('>q', self._read(8))[0]
