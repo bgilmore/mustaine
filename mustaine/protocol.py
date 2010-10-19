@@ -124,7 +124,7 @@ class Object(object):
         return self.__meta_type
 
     def __repr__(self):
-        return "<{0} object at {1}>" % (self.__meta_type, hex(id(self)),)
+        return "<%s object at %s>" % (self.__meta_type, hex(id(self)),)
 
     def __getstate__(self):
         # clear metadata for clean pickling
