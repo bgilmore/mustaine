@@ -27,6 +27,6 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-version_info = (0, 1, 3)
+version_info = (0, 1, 4)
 __version__ =  ".".join(map(str, version_info))
 
