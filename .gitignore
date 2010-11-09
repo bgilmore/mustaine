@@ -1,3 +1,7 @@
 *.py[co]
-*.swp
+*.egg
+*.egg-info
+
+dist
+build
 tags
