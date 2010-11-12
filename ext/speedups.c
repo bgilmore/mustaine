@@ -6,13 +6,15 @@
 #include "Python.h"
 #include "byteorder.h"
 
-#include <stdint.h>
-
-
 PyDoc_STRVAR(py_read_string_docstr, "deserializes a unicode string from a Hessian input stream");
 PyObject * py_read_string(PyObject *self, PyObject *args)
 {
-	PyObject *stream, *read, *buffer, *excess, *chunk, *chunks, *shim, *result;
+	PyObject *stream, *shim, *result;
+    PyObject *read   = NULL,
+			 *buffer = NULL,
+			 *excess = NULL,
+			 *chunk  = NULL,
+			 *chunks = NULL;
 	Py_ssize_t consumed;
 	uint16_t remaining;
 
@@ -25,21 +27,18 @@ PyObject * py_read_string(PyObject *self, PyObject *args)
 		return NULL;
 	}
 
-	/* first, read 2 bytes to determine chunk length */
+	/* we need the first two bytes to determine overall character count (NOT byte count) */
 	buffer = PyObject_CallFunction(read, "i", 2);
 
-	/* this is our first chance to make sure stream.read returns strings */
+	/* this is our first chance to make sure stream.read returns raw strs */
 	if (! PyString_Check(buffer)) {
-		Py_XDECREF(buffer);
 		PyErr_SetString(PyExc_TypeError, "the stream argument to read_string must return str objects");
-		return NULL;
+		goto err;
 	}
 
-	/* fetch the character count */
 	if (PyString_Size(buffer) != 2) {
-		Py_XDECREF(buffer);
 		PyErr_SetString(PyExc_EOFError, "encountered unexpected end of stream");
-		return NULL;
+		goto err;
 	}
 
 	remaining = SWAB16(*((uint16_t *) PyString_AS_STRING(buffer)));
@@ -51,8 +50,6 @@ PyObject * py_read_string(PyObject *self, PyObject *args)
 	}
 
 	chunks = PyList_New(0);
-	excess = NULL;
-	chunk  = NULL;
 
 	while (remaining > 0) {
 		/* read minimum viable chunk */
@@ -85,7 +82,12 @@ PyObject * py_read_string(PyObject *self, PyObject *args)
 		}
 
 		remaining -= PyUnicode_GET_SIZE(chunk);
+
+		Py_DECREF(chunk);
+		Py_DECREF(buffer);
 	}
+
+	Py_DECREF(read);
 
 	shim   = PyUnicode_FromWideChar((const wchar_t *) "", 0);
 	result = PyUnicode_Join(shim, chunks);
@@ -95,6 +97,7 @@ PyObject * py_read_string(PyObject *self, PyObject *args)
 	return result;
 
 err:
+	Py_XDECREF(read);
 	Py_XDECREF(buffer);
 	Py_XDECREF(excess);
 	Py_XDECREF(chunk);
