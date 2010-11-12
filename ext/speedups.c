@@ -9,7 +9,7 @@
 #include <stdint.h>
 
 
-PyDoc_STRVAR(py_read_string_docstr, "decodes a unicode string from an input stream");
+PyDoc_STRVAR(py_read_string_docstr, "deserializes a unicode string from a Hessian input stream");
 PyObject * py_read_string(PyObject *self, PyObject *args)
 {
 	PyObject *stream, *read, *buffer, *excess, *chunk, *chunks, *shim, *result;
@@ -52,6 +52,7 @@ PyObject * py_read_string(PyObject *self, PyObject *args)
 
 	chunks = PyList_New(0);
 	excess = NULL;
+	chunk  = NULL;
 
 	while (remaining > 0) {
 		/* read minimum viable chunk */
@@ -80,13 +81,13 @@ PyObject * py_read_string(PyObject *self, PyObject *args)
 
 		/* check if we need to stash leftover bytes for the next round */
 		if (consumed < remaining) {
-			excess = PyString_FromString(PyString_AS_STRING(buffer) + consumed);
+			excess = PyString_FromStringAndSize(PyString_AS_STRING(buffer) + consumed, remaining - consumed);
 		}
 
 		remaining -= PyUnicode_GET_SIZE(chunk);
 	}
 
-	shim   = PyUnicode_FromWideChar((wchar_t) "", 0);
+	shim   = PyUnicode_FromWideChar((const wchar_t *) "", 0);
 	result = PyUnicode_Join(shim, chunks);
 	Py_DECREF(shim);
 	Py_DECREF(chunks);
