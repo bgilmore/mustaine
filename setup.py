@@ -15,7 +15,7 @@ speedups = Feature(
     ext_modules = [
         Extension(
             "mustaine._speedups",
-            depends = [os.path.join(src_root, "ext", "speedups.h")],
+            depends = [os.path.join(src_root, "ext", "byteorder.h")],
             sources = [os.path.join(src_root, "ext", "speedups.c")],
         )
     ]
