@@ -10,7 +10,7 @@ PyDoc_STRVAR(py_read_string_docstr, "deserializes a unicode string from a Hessia
 PyObject * py_read_string(PyObject *self, PyObject *args)
 {
 	PyObject *stream, *shim, *result;
-    PyObject *read   = NULL,
+	PyObject *read   = NULL,
 			 *buffer = NULL,
 			 *excess = NULL,
 			 *chunk  = NULL,
