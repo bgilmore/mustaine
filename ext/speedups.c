@@ -23,6 +23,7 @@ PyObject * py_read_string(PyObject *self, PyObject *args)
 
 	read = PyObject_GetAttrString(stream, "read");
 	if (! PyCallable_Check(read)) {
+		Py_XDECREF(read);
 		PyErr_SetString(PyExc_RuntimeError, "the stream argument to read_string must have a 'read' method");
 		return NULL;
 	}
