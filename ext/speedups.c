@@ -11,10 +11,10 @@ PyObject * py_read_string(PyObject *self, PyObject *args)
 {
 	PyObject *stream, *shim, *result;
 	PyObject *read   = NULL,
-			 *buffer = NULL,
-			 *excess = NULL,
-			 *chunk  = NULL,
-			 *chunks = NULL;
+	         *buffer = NULL,
+	         *excess = NULL,
+	         *chunk  = NULL,
+	         *chunks = NULL;
 	Py_ssize_t consumed;
 	uint16_t remaining;
 
