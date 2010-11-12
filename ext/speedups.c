@@ -9,10 +9,11 @@
 #include <stdint.h>
 
 
-PyDoc_STRVAR(read_string_docstr, "decodes a unicode string from an input stream");
-PyObject * read_string(PyObject *self, PyObject *args)
+PyDoc_STRVAR(py_read_string_docstr, "decodes a unicode string from an input stream");
+PyObject * py_read_string(PyObject *self, PyObject *args)
 {
-	PyObject *stream, *read, *buffer;
+	PyObject *stream, *read, *buffer, *excess, *chunk, *chunks, *shim, *result;
+	Py_ssize_t consumed;
 	uint16_t remaining;
 
 	if (! PyArg_UnpackTuple(args, "read_string", 1, 1, &stream))
@@ -26,13 +27,78 @@ PyObject * read_string(PyObject *self, PyObject *args)
 
 	/* first, read 2 bytes to determine chunk length */
 	buffer = PyObject_CallFunction(read, "i", 2);
+
+	/* this is our first chance to make sure stream.read returns strings */
+	if (! PyString_Check(buffer)) {
+		Py_XDECREF(buffer);
+		PyErr_SetString(PyExc_TypeError, "the stream argument to read_string must return str objects");
+		return NULL;
+	}
+
+	/* fetch the character count */
 	if (PyString_Size(buffer) != 2) {
 		Py_XDECREF(buffer);
 		PyErr_SetString(PyExc_EOFError, "encountered unexpected end of stream");
 		return NULL;
 	}
 
-	return buffer;
+	remaining = SWAB16(*((uint16_t *) PyString_AS_STRING(buffer)));
+	Py_DECREF(buffer);
+
+	/* trapdoor */
+	if (remaining == 0) {
+		return Py_BuildValue("u", "");
+	}
+
+	chunks = PyList_New(0);
+	excess = NULL;
+
+	while (remaining > 0) {
+		/* read minimum viable chunk */
+		buffer = PyObject_CallFunction(read, "i", remaining);
+		if (PyString_Size(buffer) != remaining) {
+			PyErr_SetString(PyExc_EOFError, "encountered unexpected end of stream");
+			goto err;
+		}
+
+		/* prepend overflow bytes from previous rounds if necessary */
+		if (excess != NULL) {
+			PyString_ConcatAndDel(&excess, buffer);
+			if (excess == NULL)
+				goto err;
+
+			buffer = excess;
+			excess = NULL;
+		}
+
+		chunk = PyUnicode_DecodeUTF8Stateful(PyString_AS_STRING(buffer), remaining, "strict", &consumed);
+		if (chunk == NULL)
+			goto err;
+
+		if (PyList_Append(chunks, chunk) != 0)
+			goto err;
+
+		/* check if we need to stash leftover bytes for the next round */
+		if (consumed < remaining) {
+			excess = PyString_FromString(PyString_AS_STRING(buffer) + consumed);
+		}
+
+		remaining -= PyUnicode_GET_SIZE(chunk);
+	}
+
+	shim   = PyUnicode_FromWideChar((wchar_t) "", 0);
+	result = PyUnicode_Join(shim, chunks);
+	Py_DECREF(shim);
+	Py_DECREF(chunks);
+
+	return result;
+
+err:
+	Py_XDECREF(buffer);
+	Py_XDECREF(excess);
+	Py_XDECREF(chunk);
+	Py_XDECREF(chunks);
+	return NULL;
 }
 
 
@@ -41,7 +107,7 @@ PyObject * read_string(PyObject *self, PyObject *args)
  */
 
 static PyMethodDef speedups_methods[] = {
-	{"read_string", read_string, METH_VARARGS, read_string_docstr},
+	{"read_string", py_read_string, METH_VARARGS, py_read_string_docstr},
 	{NULL, NULL},
 };
 
