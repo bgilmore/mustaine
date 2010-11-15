@@ -4,58 +4,48 @@
  */
  
 #include "Python.h"
-#include "byteorder.h"
 
 PyDoc_STRVAR(py_read_string_docstr, "deserializes a unicode string from a Hessian input stream");
 PyObject * py_read_string(PyObject *self, PyObject *args)
 {
-	PyObject *stream, *shim, *result;
+	PyObject *stream, *count;   /* arguments */
+	PyObject *shim, *result;    /* safe refs */
 	PyObject *read   = NULL,
 	         *buffer = NULL,
 	         *excess = NULL,
 	         *chunk  = NULL,
 	         *chunks = NULL;
 	Py_ssize_t consumed;
-	uint16_t remaining;
+	long remaining, needed;
 
-	if (! PyArg_UnpackTuple(args, "read_string", 1, 1, &stream))
+	if (! PyArg_UnpackTuple(args, "read_string", 2, 2, &stream, &count))
 		return NULL;
+
+	remaining = PyInt_AsLong(count);
+	if ((remaining == -1) && (PyErr_Occurred()))
+		return NULL;
+
+	/* trap door */
+	if (remaining <= 0)
+		return Py_BuildValue("u", "");
 
 	read = PyObject_GetAttrString(stream, "read");
-	if (! PyCallable_Check(read)) {
-		Py_XDECREF(read);
-		PyErr_SetString(PyExc_RuntimeError, "the stream argument to read_string must have a 'read' method");
-		return NULL;
-	}
-
-	/* we need the first two bytes to determine overall character count (NOT byte count) */
-	buffer = PyObject_CallFunction(read, "i", 2);
-
-	/* this is our first chance to make sure stream.read returns raw strs */
-	if (! PyString_Check(buffer)) {
-		PyErr_SetString(PyExc_TypeError, "the stream argument to read_string must return str objects");
+	if (! PyCallable_Check(read))
 		goto err;
-	}
-
-	if (PyString_Size(buffer) != 2) {
-		PyErr_SetString(PyExc_EOFError, "encountered unexpected end of stream");
-		goto err;
-	}
-
-	remaining = SWAB16(*((uint16_t *) PyString_AS_STRING(buffer)));
-	Py_DECREF(buffer);
-
-	/* trapdoor */
-	if (remaining == 0) {
-		return Py_BuildValue("u", "");
-	}
 
 	chunks = PyList_New(0);
+	if (chunks == NULL)
+		goto err;
 
 	while (remaining > 0) {
+		if (excess != NULL)
+			needed = remaining - PyString_GET_SIZE(excess);
+		else
+			needed = remaining;
+
 		/* read minimum viable chunk */
-		buffer = PyObject_CallFunction(read, "i", remaining);
-		if (PyString_Size(buffer) != remaining) {
+		buffer = PyObject_CallFunction(read, "i", needed);
+		if (PyString_Size(buffer) != needed) {
 			PyErr_SetString(PyExc_EOFError, "encountered unexpected end of stream");
 			goto err;
 		}
@@ -70,6 +60,7 @@ PyObject * py_read_string(PyObject *self, PyObject *args)
 			excess = NULL;
 		}
 
+		/* decode the buffer and store the resulting chunk */
 		chunk = PyUnicode_DecodeUTF8Stateful(PyString_AS_STRING(buffer), remaining, "strict", &consumed);
 		if (chunk == NULL)
 			goto err;
@@ -78,8 +69,8 @@ PyObject * py_read_string(PyObject *self, PyObject *args)
 			goto err;
 
 		/* check if we need to stash leftover bytes for the next round */
-		if (consumed < remaining) {
-			excess = PyString_FromStringAndSize(PyString_AS_STRING(buffer) + consumed, remaining - consumed);
+		if (consumed < PyString_GET_SIZE(buffer)) {
+			excess = PyString_FromStringAndSize(PyString_AS_STRING(buffer) + consumed, PyString_GET_SIZE(buffer) - consumed);
 		}
 
 		remaining -= PyUnicode_GET_SIZE(chunk);
@@ -88,10 +79,12 @@ PyObject * py_read_string(PyObject *self, PyObject *args)
 		Py_DECREF(buffer);
 	}
 
+
 	Py_DECREF(read);
 
 	shim   = PyUnicode_FromWideChar((const wchar_t *) "", 0);
 	result = PyUnicode_Join(shim, chunks);
+
 	Py_DECREF(shim);
 	Py_DECREF(chunks);
 

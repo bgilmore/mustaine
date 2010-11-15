@@ -8,6 +8,12 @@ except ImportError:
 
 from mustaine.protocol import *
 
+try:
+    from mustaine import _speedups
+except ImportError:
+    _speedups = None
+
+
 # Implementation of Hessian 1.0.2 deserialization
 #   see: http://hessian.caucho.com/doc/hessian-1.0-spec.xtp
 
@@ -165,6 +171,10 @@ class Parser(object):
 
     def _read_string(self):
         len = unpack('>H', self._read(2))[0]
+
+        # pass to optimized C parser if present
+        if _speedups:
+            return _speedups.read_string(self._stream, len)
 
         bytes = []
         while len > 0:
