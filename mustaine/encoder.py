@@ -123,14 +123,13 @@ def encode_map(obj):
     return pack('>c', 'M') + encoded + 'z'
 
 @encoder_for(Object)
-@returns('map')
 def encode_mobject(obj):
     encoded  = pack('>cH', 't', len(obj._meta_type)) + obj._meta_type
     members  = obj.__getstate__()
     del members['__meta_type'] # this is here for pickling. we don't want or need it
 
     encoded += ''.join(map(encode_keyval, members.items()))
-    return pack('>c', 'M') + encoded + 'z'
+    return (obj._meta_type.rpartition('.')[2], pack('>c', 'M') + encoded + 'z')
 
 @encoder_for(Remote)
 @returns('remote')
