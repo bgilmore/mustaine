@@ -105,10 +105,9 @@ class Binary(object):
         self.value = value
     def __add__(self, value):
         if self.value == None:
-            self.value = value
+            return Binary(value)
         else:
-            self.value = self.value + value.value
-        return self
+            return Binary(self.value + value.value)
 
 
 class Remote(object):
