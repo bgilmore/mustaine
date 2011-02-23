@@ -103,6 +103,12 @@ class Fault(Exception):
 class Binary(object):
     def __init__(self, value):
         self.value = value
+    def __add__(self, value):
+        if self.value == None:
+            self.value = value
+        else:
+            self.value = self.value + value.value
+        return self
 
 
 class Remote(object):
