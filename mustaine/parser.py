@@ -169,13 +169,13 @@ class Parser(object):
         bytes = []
         while len > 0:
             byte = self._read(1)
-            if ord(byte) in range(0x00, 0x7F):
+            if ord(byte) in range(0x00, 0x80):
                 bytes.append(byte)
-            elif ord(byte) in range(0xC2, 0xDF):
+            elif ord(byte) in range(0xC2, 0xE0):
                 bytes.append(byte + self._read(1))
-            elif ord(byte) in range(0xE0, 0xEF):
+            elif ord(byte) in range(0xE0, 0xF0):
                 bytes.append(byte + self._read(2))
-            elif ord(byte) in range(0xF0, 0xF4):
+            elif ord(byte) in range(0xF0, 0xF5):
                 bytes.append(byte + self._read(3))
             len -= 1
 
