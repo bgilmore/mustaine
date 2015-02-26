@@ -1,3 +1,9 @@
+**This project is no longer maintained**
+
+Please see the fork at `theatlantic/python-hessian <https://github.com/theatlantic/python-hessian>`_
+
+-----
+
 About
 -----
 
